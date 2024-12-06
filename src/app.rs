@@ -1,12 +1,10 @@
 use crate::{board::Board, piece::Piece};
 
 #[derive(serde::Deserialize, serde::Serialize)]
-// #[serde(default)] 
+// #[serde(default)]
 pub struct TemplateApp {
-    
     board: Board,
-    pieces: Vec<Piece>,
-
+    currently_moving: Option<Piece>,
 }
 
 // impl Default for TemplateApp {
@@ -21,33 +19,22 @@ pub struct TemplateApp {
 
 impl TemplateApp {
     /// Called once before the first frame.
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
+        Self {
+            board: Board::init_board_state(),
+            currently_moving: None,
+        }
 
-        Self { board: Board::init_board_state(), pieces: Vec::new() }
-        
         // Default::default()
-    }
-
-    pub fn row (&mut self, ui: &mut egui::Ui) {
-        
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
-        ui.label("Test");
     }
 }
 
 const BOARD_COL: f32 = 8.0;
 
 impl eframe::App for TemplateApp {
-
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
@@ -59,94 +46,155 @@ impl eframe::App for TemplateApp {
 
             egui::menu::bar(ui, |ui| {
                 // NOTE: no File->Quit on web pages!
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Quit").clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-                    });
-                    ui.add_space(16.0);
+                ui.menu_button("File", |ui| {
+                    if ui.button("Quit").clicked() {
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                    }
+                });
+                ui.add_space(16.0);
 
                 egui::widgets::global_theme_preference_buttons(ui);
             });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // ui.add(
-            //     egui::Image::new(egui::include_image!("../assets/Casual/Pieces/Chess_white_casual/Pawn.png"))
-            //         .rounding(5.0)
-            // );
+            
+            ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown),|ui| {
+                let width = ui.available_width() / BOARD_COL as f32 * 0.9;
+                let height = ui.available_height() / BOARD_COL as f32 * 0.9;
 
-            egui::Grid::new("board").num_columns(BOARD_COL as usize).max_col_width(ui.available_width() / BOARD_COL * 0.9).min_row_height(ui.available_height() / BOARD_COL * 0.9).min_col_width(ui.available_width() / BOARD_COL * 0.9).show(ui, |ui| {//Scaling the grid to be 10% less than max to avoid clipping
+                let cell_size = egui::vec2(
+                    width.min(height),
+                    height.min(width), //Ensuring the aspect ratio is always maintained
+                ); //Scaling the grid to be 10% less than max to avoid clipping
 
-                self.board.grid.iter().for_each(|&row| {
+                egui::Grid::new("board")
+                    .num_columns(BOARD_COL as usize)
+                    // .max_col_width(ui.available_width() / BOARD_COL * 0.9)
+                    // .min_row_height(ui.available_height() / BOARD_COL * 0.98)
+                    // .min_col_width(ui.available_width() / BOARD_COL * 0.98)
+                    .show(ui, |ui| {
+                        let mut moves = vec![];
 
-                    
-
-                    row.iter().for_each(|element|{
-
-                        let rect = egui::Rect { min: egui::Pos2::new(ui.available_height() * 0.98, ui.available_width() * 0.98), max: egui::Pos2::new(ui.available_height() * 0.98, ui.available_width() * 0.98) }; //Scaling the grid to be 5% less than max to avoid clipping
-                        //ui.allocate_rect(egui::Rect { min: egui::Pos2::new(ui.available_height() / BOARD_COL, ui.available_width() / BOARD_COL), max: egui::Pos2::new(ui.available_height() / BOARD_COL, ui.available_width() / BOARD_COL) }, egui::Sense { click: true, drag: true, focusable: true });
-                        
-                        //ui.dnd_drag_source(id, payload, add_contents)
-
-                        // ui.dnd_drop_zone(frame, add_contents)
-
-                        // ui.painter().hline(rect.x_range(), rect.center().y, egui::Stroke::new(1.0, egui::Color32::RED));
-
-                        // ui.painter().vline(rect.center().x, rect.y_range(), egui::Stroke::new(1.0, egui::Color32::RED));
-
-                        
-
-                        if element.is_some() {
-                            let image = element.as_ref().unwrap().get_image();
-
-                            image.paint_at(ui, rect);
-
-                            // ui.painter().hline(x, y, stroke);
-
-                            let response = ui.add(image);
-
-                            //TODO Do stuff when the image is clicked
-                        } else {
-                            // ui.add(rect);
-                            ui.allocate_rect(rect, egui::Sense { click: false, drag: false, focusable: false });
-                            // ui.label("");
+                        if let Some(moving_piece) = self.currently_moving {
+                            moves.append(&mut moving_piece.get_valid_moves());
                         }
-                    });
 
-                    ui.end_row();
-                    // ui.label("");
-                });
+                        self.board
+                            .grid
+                            .iter_mut()
+                            .enumerate()
+                            .for_each(|(row_idx, row)| {
+                                row.iter_mut().enumerate().for_each(|(col_idx, element)| {
+                                    let highlight = moves.contains(&(col_idx as u8, row_idx as u8));
 
-                // ui.add(egui::widgets::Image::from_bytes("../assets/Casual/Pieces/Chess_white_casual/Pawn.png", include_bytes!("../assets/Casual/Pieces/Chess_white_casual/Pawn.png")));
+                                    if let Some(element) = element {
+                                        let image = element.get_image().sense(egui::Sense {
+                                            click: true,
+                                            drag: true,
+                                            focusable: true,
+                                        });
 
-                // self.board.grid.iter().for_each(|&row| {
-                //     row.iter().for_each(|element|{
-                //         print!("{:#?}", element);
-                //     });
-                //     println!("");
-                // });
+                                        let res = ui.add_sized(cell_size, image).highlight();
 
-                // println!("");
-                
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-                // self.row(ui);
-                // ui.end_row();
-            })
+                                        if res.clicked() {
+                                            element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
 
+                                            if element.is_moving == true {
+                                                self.currently_moving = Some(element.to_owned())
+                                            } else {
+                                                self.currently_moving = None;
+                                            }
+                                        }
+
+                                        if highlight == true {
+                                            ui.painter().rect_stroke(
+                                                res.rect,
+                                                0.0,
+                                                egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                            );
+                                        } else {
+                                            ui.painter().rect_stroke(
+                                                res.rect,
+                                                0.0,
+                                                egui::Stroke::new(1.0, egui::Color32::WHITE),
+                                            );
+                                        }
+                                    } else {
+                                        let (rect, response) = ui.allocate_exact_size(
+                                            cell_size,
+                                            egui::Sense {
+                                                click: true,
+                                                drag: true,
+                                                focusable: true,
+                                            },
+                                        );
+
+                                        // let dropped = response.dnd_release_payload().unwrap();
+
+                                        if highlight == true {
+                                            ui.painter().rect_stroke(
+                                                rect,
+                                                0.0,
+                                                egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                            );
+                                        } else {
+                                            ui.painter().rect_stroke(
+                                                rect,
+                                                0.0,
+                                                egui::Stroke::new(1.0, egui::Color32::WHITE),
+                                            );
+                                        }
+                                    }
+                                });
+
+                                ui.end_row();
+                                // ui.label("");
+                            });
+                    })
+            });
+
+            if let Some(moveable) = &self.currently_moving {
+                println!("Currently moving: {}", moveable.get_name());
+            } else {
+                println!("Nothing moves");
+            }
         });
+
+        // egui::CentralPanel::default().show(ctx, |ui| {
+        //     let cell_size = egui::vec2(
+        //         ui.available_width() / BOARD_COL as f32 * 0.9,
+        //         ui.available_height() / BOARD_COL as f32 * 0.9,
+        //     );
+
+        //     egui::Grid::new("board")
+        //         .num_columns(BOARD_COL as usize)
+        //         .show(ui, |ui| {
+        //             for row in self.board.grid.iter() {
+        //                 for element in row.iter() {
+        //                     // Allocate space for this cell
+        //                     let (rect, _response) =
+        //                         ui.allocate_exact_size(cell_size, egui::Sense::click());
+
+        //                     // Draw the outline of the cell
+        //                     ui.painter().rect_stroke(
+        //                         rect,
+        //                         0.0,
+        //                         egui::Stroke::new(1.0, egui::Color32::BLACK),
+        //                     );
+
+        //                     // If there's a piece to draw, place it inside this allocated area
+        //                     if let Some(piece) = element {
+        //                         let image = piece.get_image();
+
+        //                         // You can either add the image using add_sized to fit exactly, or just `ui.put`:
+        //                         // let mut image_ui = ui.add_sized(rect.size(), image);
+        //                         ui.put(rect, image);
+        //                     }
+        //                 }
+        //                 ui.end_row();
+        //             }
+        //         });
+        // });
     }
 }
