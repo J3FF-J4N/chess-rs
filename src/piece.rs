@@ -154,13 +154,15 @@ impl Piece {
     fn get_bishop_moves(&self) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
-        for idx in 0..=7{//There is a max of 8 possible fields at once the bishop can move
+        for idx in 1..=7 {
+            //There is a max of 8 possible fields at once the bishop can move
 
             //North East
             let new_x = self.pos_x.overflowing_add(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_x.1 == false && new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7{
+            if new_x.1 == false && new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_x.0 <= 7 && new_y.0 <= 7 {
                     ret.push((new_x.0, new_y.0));
                 }
             }
@@ -168,28 +170,30 @@ impl Piece {
             //South East
             let new_x = self.pos_x.overflowing_add(idx);
             let new_y = self.pos_y.overflowing_add(idx);
-            if new_x.1 == false && new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7{
+            if new_x.1 == false && new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_x.0 <= 7 && new_y.0 <= 7 {
                     ret.push((new_x.0, new_y.0));
                 }
             }
             //South West
             let new_x = self.pos_x.overflowing_sub(idx);
             let new_y = self.pos_y.overflowing_add(idx);
-            if new_x.1 == false && new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7{
+            if new_x.1 == false && new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_x.0 <= 7 && new_y.0 <= 7 {
                     ret.push((new_x.0, new_y.0));
                 }
             }
             //North West
             let new_x = self.pos_x.overflowing_sub(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_x.1 == false && new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7{
+            if new_x.1 == false && new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_x.0 <= 7 && new_y.0 <= 7 {
                     ret.push((new_x.0, new_y.0));
                 }
             }
-
         }
 
         ret
@@ -198,88 +202,171 @@ impl Piece {
     fn get_king_moves(&self) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
+        if self.first_move == true {
+            //Castle
+        }
+
+        //North
+        let new_y = self.pos_y.overflowing_sub(1);
+
+        if new_y.1 == false {
+            if new_y.0 <= 7 && new_y.0 <= 7 {
+                ret.push((self.pos_x, new_y.0));
+
+                //North East
+                let new_x = self.pos_x.overflowing_add(1);
+
+                if new_x.1 == false {
+                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                        ret.push((new_x.0, new_y.0));
+                    }
+                }
+
+                //North West
+                let new_x = self.pos_x.overflowing_sub(1);
+
+                if new_x.1 == false {
+                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                        ret.push((new_x.0, new_y.0));
+                    }
+                }
+            }
+        }
+
+        //East
+        let new_x = self.pos_x.overflowing_add(1);
+
+        if new_x.1 == false {
+            if new_x.0 <= 7 && new_x.0 <= 7 {
+                ret.push((new_x.0, self.pos_y));
+            }
+        }
+
+
+
+        //West
+        let new_x = self.pos_x.overflowing_sub(1);
+
+        if new_x.1 == false {
+            if new_x.0 <= 7 && new_x.0 <= 7 {
+                ret.push((new_x.0, self.pos_y));
+            }
+        }
+
+        //South
+        let new_y = self.pos_y.overflowing_add(1);
+
+        if new_y.1 == false {
+            if new_y.0 <= 7 && new_y.0 <= 7 {
+                ret.push((self.pos_x, new_y.0));
+
+                //South East
+                let new_x = self.pos_x.overflowing_add(1);
+
+                if new_x.1 == false {
+                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                        ret.push((new_x.0, new_y.0));
+                    }
+                }
+
+                //South West
+                let new_x = self.pos_x.overflowing_sub(1);
+
+                if new_x.1 == false {
+                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                        ret.push((new_x.0, new_y.0));
+                    }
+                }
+            }
+        }
+
         ret
     }
 
     fn get_knight_moves(&self) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
+        //North
+        let new_y = self.pos_y.overflowing_sub(2);
+        if new_y.1 == false {
+            //Only when moves are within bounds should it be valid
+            if new_y.0 <= 7 {
+                let new_x = self.pos_x.overflowing_add(1); //3 North 1 East
 
-                    //North
-                    let new_y = self.pos_y.overflowing_sub(2);
-                    if new_y.1 == false { //Only when moves are within bounds should it be valid
-                        if new_y.0 <= 7{
-                            let new_x = self.pos_x.overflowing_add(1); //3 North 1 East
+                if new_x.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
 
-                            if new_x.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                            
-                            let new_x = self.pos_x.overflowing_sub(1); //3 North 1 West
+                let new_x = self.pos_x.overflowing_sub(1); //3 North 1 West
 
-                            if new_x.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                        }
-                    }
-        
-                    //East
-                    let new_x = self.pos_x.overflowing_sub(2);
-                    if new_x.1 == false { //Only when moves are within bounds should it be valid
-                        if new_x.0 <= 7{
-                            let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
+                if new_x.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
+            }
+        }
 
-                            if new_y.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                            
-                            let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
+        //East
+        let new_x = self.pos_x.overflowing_sub(2);
+        if new_x.1 == false {
+            //Only when moves are within bounds should it be valid
+            if new_x.0 <= 7 {
+                let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
 
-                            if new_y.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                        }
-                    }
-                    //South
-                    let new_y = self.pos_y.overflowing_add(2);
-                    if new_y.1 == false { //Only when moves are within bounds should it be valid
-                        if new_y.0 <= 7{
-                            let new_x = self.pos_x.overflowing_add(1); //3 South 1 East
+                if new_y.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
 
-                            if new_x.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                            
-                            let new_x = self.pos_x.overflowing_sub(1); //3 South 1 West
+                let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
 
-                            if new_x.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                        }
-                    }
-                    //West
-                    let new_x = self.pos_x.overflowing_add(2);
-                    if new_x.1 == false { //Only when moves are within bounds should it be valid
-                        if new_x.0 <= 7{
-                            let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
+                if new_y.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
+            }
+        }
+        //South
+        let new_y = self.pos_y.overflowing_add(2);
+        if new_y.1 == false {
+            //Only when moves are within bounds should it be valid
+            if new_y.0 <= 7 {
+                let new_x = self.pos_x.overflowing_add(1); //3 South 1 East
 
-                            if new_y.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                            
-                            let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
+                if new_x.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
 
-                            if new_y.1 == false {
-                                ret.push((new_x.0, new_y.0));
-                            }
-                        }
-                    }
+                let new_x = self.pos_x.overflowing_sub(1); //3 South 1 West
+
+                if new_x.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
+            }
+        }
+        //West
+        let new_x = self.pos_x.overflowing_add(2);
+        if new_x.1 == false {
+            //Only when moves are within bounds should it be valid
+            if new_x.0 <= 7 {
+                let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
+
+                if new_y.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
+
+                let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
+
+                if new_y.1 == false {
+                    ret.push((new_x.0, new_y.0));
+                }
+            }
+        }
 
         ret
     }
 
     fn get_pawn_moves(&self) -> Vec<(u8, u8)> {
         let mut ret: Vec<(u8, u8)> = Vec::with_capacity(64); //64 Is the amount of available spaces on a chess board; it is impossible to have more moves than available spaces
+
+        //TODO En Passant
 
         //Pawn is the only piece where the colour matters as it's the only piece that has a direction dependency (e.g. Black can only go Down and White up)
         if self.first_move == true {
@@ -325,38 +412,42 @@ impl Piece {
     fn get_rook_moves(&self) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
-        for idx in 0..=7{//There is a max of 8 possible fields at once the bishop can move
+        for idx in 1..=7 {
+            //There is a max of 8 possible fields at once the bishop can move
 
             //North
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7{
+            if new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_y.0 <= 7 {
                     ret.push((self.pos_x, new_y.0));
                 }
             }
 
             //East
             let new_x = self.pos_x.overflowing_add(idx);
-            if new_x.1 == false { //Only when moves are within bounds should it be valid
+            if new_x.1 == false {
+                //Only when moves are within bounds should it be valid
                 if new_x.0 <= 7 {
                     ret.push((new_x.0, self.pos_y));
                 }
             }
             //South
             let new_y = self.pos_y.overflowing_add(idx);
-            if new_y.1 == false { //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7{
+            if new_y.1 == false {
+                //Only when moves are within bounds should it be valid
+                if new_y.0 <= 7 {
                     ret.push((self.pos_x, new_y.0));
                 }
             }
             //West
             let new_x = self.pos_x.overflowing_sub(idx);
-            if new_x.1 == false { //Only when moves are within bounds should it be valid
+            if new_x.1 == false {
+                //Only when moves are within bounds should it be valid
                 if new_x.0 <= 7 {
                     ret.push((new_x.0, self.pos_y));
                 }
             }
-
         }
 
         ret

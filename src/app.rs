@@ -58,101 +58,104 @@ impl eframe::App for TemplateApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            
-            ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown),|ui| {
-                let width = ui.available_width() / BOARD_COL as f32 * 0.9;
-                let height = ui.available_height() / BOARD_COL as f32 * 0.9;
+            ui.with_layout(
+                egui::Layout::centered_and_justified(egui::Direction::TopDown),
+                |ui| {
+                    let width = ui.available_width() / BOARD_COL as f32 * 0.9;
+                    let height = ui.available_height() / BOARD_COL as f32 * 0.9;
 
-                let cell_size = egui::vec2(
-                    width.min(height),
-                    height.min(width), //Ensuring the aspect ratio is always maintained
-                ); //Scaling the grid to be 10% less than max to avoid clipping
+                    let cell_size = egui::vec2(
+                        width.min(height),
+                        height.min(width), //Ensuring the aspect ratio is always maintained
+                    ); //Scaling the grid to be 10% less than max to avoid clipping
 
-                egui::Grid::new("board")
-                    .num_columns(BOARD_COL as usize)
-                    // .max_col_width(ui.available_width() / BOARD_COL * 0.9)
-                    // .min_row_height(ui.available_height() / BOARD_COL * 0.98)
-                    // .min_col_width(ui.available_width() / BOARD_COL * 0.98)
-                    .show(ui, |ui| {
-                        let mut moves = vec![];
+                    egui::Grid::new("board")
+                        .num_columns(BOARD_COL as usize)
+                        // .max_col_width(ui.available_width() / BOARD_COL * 0.9)
+                        // .min_row_height(ui.available_height() / BOARD_COL * 0.98)
+                        // .min_col_width(ui.available_width() / BOARD_COL * 0.98)
+                        .show(ui, |ui| {
+                            let mut moves = vec![];
 
-                        if let Some(moving_piece) = self.currently_moving {
-                            moves.append(&mut moving_piece.get_valid_moves());
-                        }
+                            if let Some(moving_piece) = self.currently_moving {
+                                moves.append(&mut moving_piece.get_valid_moves());
+                            }
 
-                        self.board
-                            .grid
-                            .iter_mut()
-                            .enumerate()
-                            .for_each(|(row_idx, row)| {
-                                row.iter_mut().enumerate().for_each(|(col_idx, element)| {
-                                    let highlight = moves.contains(&(col_idx as u8, row_idx as u8));
+                            self.board
+                                .grid
+                                .iter_mut()
+                                .enumerate()
+                                .for_each(|(row_idx, row)| {
+                                    row.iter_mut().enumerate().for_each(|(col_idx, element)| {
+                                        let highlight =
+                                            moves.contains(&(col_idx as u8, row_idx as u8));
 
-                                    if let Some(element) = element {
-                                        let image = element.get_image().sense(egui::Sense {
-                                            click: true,
-                                            drag: true,
-                                            focusable: true,
-                                        });
-
-                                        let res = ui.add_sized(cell_size, image).highlight();
-
-                                        if res.clicked() {
-                                            element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
-
-                                            if element.is_moving == true {
-                                                self.currently_moving = Some(element.to_owned())
-                                            } else {
-                                                self.currently_moving = None;
-                                            }
-                                        }
-
-                                        if highlight == true {
-                                            ui.painter().rect_stroke(
-                                                res.rect,
-                                                0.0,
-                                                egui::Stroke::new(1.0, egui::Color32::GOLD),
-                                            );
-                                        } else {
-                                            ui.painter().rect_stroke(
-                                                res.rect,
-                                                0.0,
-                                                egui::Stroke::new(1.0, egui::Color32::WHITE),
-                                            );
-                                        }
-                                    } else {
-                                        let (rect, response) = ui.allocate_exact_size(
-                                            cell_size,
-                                            egui::Sense {
+                                        if let Some(element) = element {
+                                            let image = element.get_image().sense(egui::Sense {
                                                 click: true,
                                                 drag: true,
                                                 focusable: true,
-                                            },
-                                        );
+                                            });
 
-                                        // let dropped = response.dnd_release_payload().unwrap();
+                                            let res = ui.add_sized(cell_size, image).highlight();
 
-                                        if highlight == true {
-                                            ui.painter().rect_stroke(
-                                                rect,
-                                                0.0,
-                                                egui::Stroke::new(1.0, egui::Color32::GOLD),
-                                            );
+                                            if res.clicked() {
+                                                element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
+
+                                                if element.is_moving == true {
+                                                    self.currently_moving = Some(element.to_owned())
+                                                } else {
+                                                    self.currently_moving = None;
+                                                }
+                                            }
+
+                                            if highlight == true {
+                                                ui.painter().rect_stroke(
+                                                    res.rect,
+                                                    0.0,
+                                                    egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                                );
+                                            } else {
+                                                ui.painter().rect_stroke(
+                                                    res.rect,
+                                                    0.0,
+                                                    egui::Stroke::new(1.0, egui::Color32::WHITE),
+                                                );
+                                            }
                                         } else {
-                                            ui.painter().rect_stroke(
-                                                rect,
-                                                0.0,
-                                                egui::Stroke::new(1.0, egui::Color32::WHITE),
+                                            let (rect, response) = ui.allocate_exact_size(
+                                                cell_size,
+                                                egui::Sense {
+                                                    click: true,
+                                                    drag: true,
+                                                    focusable: true,
+                                                },
                                             );
-                                        }
-                                    }
-                                });
 
-                                ui.end_row();
-                                // ui.label("");
-                            });
-                    })
-            });
+                                            // let dropped = response.dnd_release_payload().unwrap();
+
+                                            if highlight == true {
+                                                ui.painter().rect_stroke(
+                                                    rect,
+                                                    0.0,
+                                                    egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                                );
+                                            } else {
+                                                ui.painter().rect_stroke(
+                                                    rect,
+                                                    0.0,
+                                                    egui::Stroke::new(1.0, egui::Color32::WHITE),
+                                                );
+                                            }
+                                        }
+                                    });
+
+                                    ui.end_row();
+                                    // ui.label("");
+                                });
+                        })
+                },
+            );
 
             if let Some(moveable) = &self.currently_moving {
                 println!("Currently moving: {}", moveable.get_name());
