@@ -383,7 +383,7 @@ impl Piece {
 
                 let new_x = self.pos_x.overflowing_sub(1); //3 North 1 West
 
-                if new_x.1 == false  && new_x.0 <= 7 {
+                if new_x.1 == false && new_x.0 <= 7 {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -566,6 +566,8 @@ impl Piece {
     fn get_rook_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
+        let mut blocking = Direction::default();
+
         for idx in 1..=7 {
             //There is a max of 8 possible fields at once the bishop can move
 
@@ -573,8 +575,26 @@ impl Piece {
             let new_y = self.pos_y.overflowing_sub(idx);
             if new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7 {
-                    ret.push((self.pos_x, new_y.0));
+                if new_y.0 <= 7 && idx <= blocking.north {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) =
+                        &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
+                    {
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+
+                            blocking.north = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+
+                            blocking.north = idx;
+
+                            ret.push((self.pos_x, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((self.pos_x, new_y.0));
+                    }
                 }
             }
 
@@ -582,24 +602,78 @@ impl Piece {
             let new_x = self.pos_x.overflowing_add(idx);
             if new_x.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 {
-                    ret.push((new_x.0, self.pos_y));
+                if new_x.0 <= 7 && idx <= blocking.east {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) =
+                        &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+
+                            blocking.east = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+
+                            blocking.east = idx;
+
+                            ret.push((new_x.0, self.pos_y)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, self.pos_y));
+                    }
                 }
             }
             //South
             let new_y = self.pos_y.overflowing_add(idx);
             if new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7 {
-                    ret.push((self.pos_x, new_y.0));
+                if new_y.0 <= 7 && idx <= blocking.south {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) =
+                        &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
+                    {
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+
+                            blocking.south = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+
+                            blocking.south = idx;
+
+                            ret.push((self.pos_x, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((self.pos_x, new_y.0));
+                    }
                 }
             }
             //West
             let new_x = self.pos_x.overflowing_sub(idx);
             if new_x.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 {
-                    ret.push((new_x.0, self.pos_y));
+                if new_x.0 <= 7 && idx <= blocking.west {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) =
+                        &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+
+                            blocking.west = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+
+                            blocking.west = idx;
+
+                            ret.push((new_x.0, self.pos_y)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, self.pos_y));
+                    }
                 }
             }
         }
