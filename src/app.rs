@@ -129,6 +129,7 @@ impl eframe::App for TemplateApp {
                                             }
 
 
+                                            #[cfg(debug_assertions)]
                                             if res.secondary_clicked() {
                                                 println!("{:#?}", element);
                                             }
@@ -161,11 +162,13 @@ impl eframe::App for TemplateApp {
 
                                                 if moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.is_some() {//When a piece is moving set the destination when it is valid
                                                     self.currently_moving.as_mut().unwrap().move_piece(col_idx as u8, row_idx as u8);
+                                                    #[cfg(debug_assertions)]
                                                     println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
                                                 }
 
                                             }
 
+                                            #[cfg(debug_assertions)]
                                             if response.secondary_clicked() {
                                                 println!("{:#?}", element);
                                             }

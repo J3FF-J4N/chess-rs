@@ -367,14 +367,34 @@ impl Piece {
             if new_y.0 <= 7 {
                 let new_x = self.pos_x.overflowing_add(1); //3 North 1 East
 
-                if new_x.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_x.1 == false && new_x.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
 
                 let new_x = self.pos_x.overflowing_sub(1); //3 North 1 West
 
-                if new_x.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_x.1 == false  && new_x.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
         }
@@ -386,14 +406,34 @@ impl Piece {
             if new_x.0 <= 7 {
                 let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
 
-                if new_y.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_y.1 == false && new_y.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
 
                 let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
 
-                if new_y.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_y.1 == false && new_y.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
         }
@@ -404,14 +444,34 @@ impl Piece {
             if new_y.0 <= 7 {
                 let new_x = self.pos_x.overflowing_add(1); //3 South 1 East
 
-                if new_x.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_x.1 == false && new_x.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
 
                 let new_x = self.pos_x.overflowing_sub(1); //3 South 1 West
 
-                if new_x.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_x.1 == false && new_x.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    };
                 }
             }
         }
@@ -422,14 +482,34 @@ impl Piece {
             if new_x.0 <= 7 {
                 let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
 
-                if new_y.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_y.1 == false && new_y.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
 
                 let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
 
-                if new_y.1 == false {
-                    ret.push((new_x.0, new_y.0));
+                if new_y.1 == false && new_y.0 <= 7 {
+                    //If there is a piece some conditions need to be checked
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        if pot_blocking.get_colour() != self.get_colour() {
+                            //If the piece is of the opposing colour the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
         }
