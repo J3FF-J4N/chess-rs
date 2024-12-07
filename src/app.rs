@@ -27,7 +27,6 @@ const BOARD_COL: f32 = 8.0;
 impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-
         egui_extras::install_image_loaders(ctx);
 
         // egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -58,6 +57,8 @@ impl eframe::App for TemplateApp {
                         height.min(width), //Ensuring the aspect ratio is always maintained
                     ); //Scaling the grid to be 10% less than max to avoid clipping
 
+                    self.board.update_board(self.currently_moving);
+
                     egui::Grid::new("board")
                         .num_columns(BOARD_COL as usize)
                         // .max_col_width(ui.available_width() / BOARD_COL * 0.9)
@@ -74,8 +75,8 @@ impl eframe::App for TemplateApp {
 
                             //TODO Filter moves that are blocked by other pieces
                             if let Some(moving_piece) = self.currently_moving {
-                                moves.append(&mut moving_piece.get_valid_moves());
-                                // self.board.get_valid_moves(&moving_piece);
+                                // moves.append(&mut moving_piece.get_valid_moves());
+                                moves.append(&mut self.board.get_valid_moves(&moving_piece));
                             }
 
                             self.board
@@ -85,7 +86,7 @@ impl eframe::App for TemplateApp {
                                 .for_each(|(row_idx, row)| {
                                     row.iter_mut().enumerate().for_each(|(col_idx, element)| {
 
-                                        let mut highlight =
+                                        let highlight =
                                             moves.contains(&(col_idx as u8, row_idx as u8));
 
                                         if let Some(element) = element {
@@ -93,18 +94,18 @@ impl eframe::App for TemplateApp {
 
                                             /*When there is a piece present in the path of the moving piece the position from the current piece is removed as available movement spot.
                                             When the piece is of the opposing colour the field is highligted as possible capture point.*/
-                                            if highlight == true { //Only if the highlight is true does this code need to be executed
+                                            // if highlight == true { //Only if the highlight is true does this code need to be executed
 
-                                                moves.iter().for_each(|to_filter|{
+                                            //     // moves.iter().for_each(|to_filter|{
 
-                                                    if highlight == true { //If the highlight is already false there is no need to continue checking for equality
-                                                        highlight = !element.pos_x.eq(&to_filter.0) || !element.pos_y.eq(&to_filter.1); //If either of the coordinates differ the highlight is kept
-                                                    }
+                                            //     //     if highlight == true { //If the highlight is already false there is no need to continue checking for equality
+                                            //     //         highlight = !element.pos_x.eq(&to_filter.0) || !element.pos_y.eq(&to_filter.1); //If either of the coordinates differ the highlight is kept
+                                            //     //     }
                                         
                                                     
-                                                });
+                                            //     // });
 
-                                            }
+                                            // }
 
 
                                             let image = element.get_image().sense(egui::Sense {
@@ -118,11 +119,18 @@ impl eframe::App for TemplateApp {
                                             if res.clicked() { //Select a piece for movement
                                                 element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
 
+                                                //TODO Find a correct way to capture a piece
+
                                                 if element.is_moving == true {
                                                     self.currently_moving = Some(element.to_owned())
                                                 } else {
                                                     self.currently_moving = None;
                                                 }
+                                            }
+
+
+                                            if res.secondary_clicked() {
+                                                println!("{:#?}", element);
                                             }
 
                                             if highlight == true {//Highlight fields valid for movement
@@ -158,6 +166,10 @@ impl eframe::App for TemplateApp {
 
                                             }
 
+                                            if response.secondary_clicked() {
+                                                println!("{:#?}", element);
+                                            }
+
                                             if highlight == true { //Highlight fields valid for movement
                                                 ui.painter().rect_stroke(
                                                     rect,
@@ -178,7 +190,7 @@ impl eframe::App for TemplateApp {
 
                                 });
 
-                                self.board.update_board(self.currently_moving);
+                                
                         })
                 },
             );

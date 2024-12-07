@@ -1,3 +1,5 @@
+use crate::board::{Board, Direction};
+
 #[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PieceType {
     Bishop,
@@ -143,30 +145,49 @@ impl Piece {
     }
 
     /*A vector is much more sensible as it is not gueranteed that a piece moves at all. If it moves the space is allocated. */
-    pub fn get_valid_moves(&self) -> Vec<(u8, u8)> {
+    pub fn get_valid_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         match self.piece_type {
-            PieceType::Bishop => self.get_bishop_moves(),
-            PieceType::King => self.get_king_moves(),
-            PieceType::Knight => self.get_knight_moves(),
-            PieceType::Pawn => self.get_pawn_moves(),
-            PieceType::Queen => self.get_queen_moves(),
-            PieceType::Rook => self.get_rook_moves(),
+            PieceType::Bishop => self.get_bishop_moves(boardstate),
+            PieceType::King => self.get_king_moves(boardstate),
+            PieceType::Knight => self.get_knight_moves(boardstate),
+            PieceType::Pawn => self.get_pawn_moves(boardstate),
+            PieceType::Queen => self.get_queen_moves(boardstate),
+            PieceType::Rook => self.get_rook_moves(boardstate),
         }
     }
 
-    fn get_bishop_moves(&self) -> Vec<(u8, u8)> {
+    fn get_bishop_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
+        let mut blocking = Direction::default();
+
         let mut ret = vec![];
 
         for idx in 1..=7 {
             //There is a max of 8 possible fields at once the bishop can move
 
+            // println!("X:{} Y:{}", self.pos_x, self.pos_y);
             //North East
             let new_x = self.pos_x.overflowing_add(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7 {
-                    ret.push((new_x.0, new_y.0));
+                if idx <= blocking.north_east && new_x.0 <= 7 && new_y.0 <= 7 {
+                    //Check if there is a piece blocking the path
+
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        //If there is a piece some conditions need to be checked
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+                            blocking.north_east = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+                            blocking.north_east = idx;
+                            ret.push((new_x.0, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
 
@@ -175,8 +196,23 @@ impl Piece {
             let new_y = self.pos_y.overflowing_add(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7 {
-                    ret.push((new_x.0, new_y.0));
+                if idx <= blocking.south_east && new_x.0 <= 7 && new_y.0 <= 7 {
+                    //Remain in bounds of the array
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        //If there is a piece some conditions need to be checked
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+                            blocking.south_east = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+                            blocking.south_east = idx;
+                            ret.push((new_x.0, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
             //South West
@@ -184,17 +220,54 @@ impl Piece {
             let new_y = self.pos_y.overflowing_add(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7 {
-                    ret.push((new_x.0, new_y.0));
+                if idx <= blocking.south_west && new_x.0 <= 7 && new_y.0 <= 7 {
+                    //Remain in bounds of the array
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        //If there is a piece some conditions need to be checked
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+                            blocking.south_west = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+                            blocking.south_west = idx;
+                            ret.push((new_x.0, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
+
+            //The first piece that appears in the top right corner blocks any other piece from blocking the path
             //North West
             let new_x = self.pos_x.overflowing_sub(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_x.1 == false && new_y.1 == false {
+            if new_x.1 == false && new_y.1 == false && new_x.0 <= 7 && new_y.0 <= 7 {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && new_y.0 <= 7 {
-                    ret.push((new_x.0, new_y.0));
+                // if new_x.0 <= blocking.north_west && new_y.0 <= blocking.north_west { //Remain in bounds of the array
+                if idx <= blocking.north_west {
+                    //Remain in bounds of the array
+                    if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                    {
+                        //If there is a piece some conditions need to be checked
+
+                        if pot_blocking.get_colour() == self.get_colour() {
+                            //If the piece at the given location is of the same colour the movement is blocked before
+
+                            blocking.north_west = idx;
+                        } else {
+                            //If the piece at the given location is of the opposing colour the move is allowed and everything afterwards is blocked
+
+                            blocking.north_west = idx;
+
+                            ret.push((new_x.0, new_y.0)); //Thhis is then the last valid move in the given direction
+                        }
+                    } else {
+                        //Otherwise the move is valid
+                        ret.push((new_x.0, new_y.0));
+                    }
                 }
             }
         }
@@ -202,7 +275,7 @@ impl Piece {
         ret
     }
 
-    fn get_king_moves(&self) -> Vec<(u8, u8)> {
+    fn get_king_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
         if self.first_move == true {
@@ -245,8 +318,6 @@ impl Piece {
             }
         }
 
-
-
         //West
         let new_x = self.pos_x.overflowing_sub(1);
 
@@ -286,7 +357,7 @@ impl Piece {
         ret
     }
 
-    fn get_knight_moves(&self) -> Vec<(u8, u8)> {
+    fn get_knight_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
         //North
@@ -366,7 +437,7 @@ impl Piece {
         ret
     }
 
-    fn get_pawn_moves(&self) -> Vec<(u8, u8)> {
+    fn get_pawn_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret: Vec<(u8, u8)> = Vec::with_capacity(64); //64 Is the amount of available spaces on a chess board; it is impossible to have more moves than available spaces
 
         //TODO En Passant
@@ -401,18 +472,18 @@ impl Piece {
         ret
     }
 
-    fn get_queen_moves(&self) -> Vec<(u8, u8)> {
+    fn get_queen_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
         //Queen has the moveset of bishop + rook
-        ret.append(&mut self.get_bishop_moves());
+        ret.append(&mut self.get_bishop_moves(boardstate));
 
-        ret.append(&mut self.get_rook_moves());
+        ret.append(&mut self.get_rook_moves(boardstate));
 
         ret
     }
 
-    fn get_rook_moves(&self) -> Vec<(u8, u8)> {
+    fn get_rook_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
         let mut ret = vec![];
 
         for idx in 1..=7 {
@@ -456,14 +527,13 @@ impl Piece {
         ret
     }
 
-    pub fn move_piece(&mut self, new_x: u8, new_y: u8){
+    pub fn move_piece(&mut self, new_x: u8, new_y: u8) {
         if self.first_move == true {
             self.first_move = false;
         }
 
         self.pos_x = new_x;
         self.pos_y = new_y;
-
     }
 
     pub fn get_type(&self) -> PieceType {
