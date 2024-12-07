@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PieceType {
     Bishop,
     King,
@@ -8,19 +8,20 @@ pub enum PieceType {
     Rook,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Colour {
     White,
     Black,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Piece {
     //Information about the piece
     colour: Colour,
     piece_type: PieceType,
-    pos_x: u8,
-    pos_y: u8,
+    pub pos_x: u8,
+    pub pos_y: u8,
+    pub piece_id: u8, //This is needed as there are several pieces that are the same
 
     //State of the piece
     pub is_moving: bool,
@@ -34,12 +35,13 @@ pub struct Piece {
 }
 
 impl Piece {
-    pub fn new(colour: Colour, piece_type: PieceType, pos_x: u8, pos_y: u8) -> Self {
+    pub fn new(colour: Colour, piece_type: PieceType, pos_x: u8, pos_y: u8, piece_id: u8) -> Self {
         Self {
             colour: colour,
             piece_type: piece_type,
             pos_x: pos_x,
             pos_y: pos_y,
+            piece_id: piece_id,
             is_moving: false,
             first_move: true,
         }
@@ -59,6 +61,7 @@ impl Piece {
     // const QB: &'static str = "../assets/Casual/Pieces/Chess_black_casual/Queen.png";
     // const RB: &'static str = "../assets/Casual/Pieces/Chess_black_casual/Rook.png";
 
+    /*Unfortunately, "include_bytes!" needs a string literal and a constant variable does not work. This would make the code much prettier and more concise */
     pub fn get_image(&self) -> egui::widgets::Image<'_> {
         match self.colour {
             Colour::White => match self.piece_type {
@@ -453,9 +456,27 @@ impl Piece {
         ret
     }
 
-    pub fn get_id(&self) -> egui::Id {
-        egui::Id::new((self.get_name(), self.pos_x, self.pos_y))
+    pub fn move_piece(&mut self, new_x: u8, new_y: u8){
+        if self.first_move == true {
+            self.first_move = false;
+        }
+
+        self.pos_x = new_x;
+        self.pos_y = new_y;
+
     }
+
+    pub fn get_type(&self) -> PieceType {
+        self.piece_type
+    }
+
+    pub fn get_colour(&self) -> Colour {
+        self.colour
+    }
+
+    // pub fn get_id(&self) -> egui::Id {
+    //     egui::Id::new((self.get_name(), self.pos_x, self.pos_y))
+    // }
 
     // const PIECE_COUNT: u8 = 8;
 

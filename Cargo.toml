@@ -26,6 +26,7 @@ egui_extras = { version = "*", features = ["all_loaders"] }
 serde = { version = "1", features = ["derive"] }
 image = { version = "0.25.5", features = ["jpeg", "png"] }
 array2d = "0.3.2"
+itertools = "0.13.0"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -7,16 +7,6 @@ pub struct TemplateApp {
     currently_moving: Option<Piece>,
 }
 
-// impl Default for TemplateApp {
-//     fn default() -> Self {
-//         Self {
-//             // Example stuff:
-//             board: Board::init_board_state(),
-//             value: 2.7,
-//         }
-//     }
-// }
-
 impl TemplateApp {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
@@ -37,32 +27,31 @@ const BOARD_COL: f32 = 8.0;
 impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+
         egui_extras::install_image_loaders(ctx);
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
+        // egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        //     // The top panel is often a good place for a menu bar:
 
-            egui::menu::bar(ui, |ui| {
-                // NOTE: no File->Quit on web pages!
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                    }
-                });
-                ui.add_space(16.0);
+        //     egui::menu::bar(ui, |ui| {
+        //         // NOTE: no File->Quit on web pages!
+        //         ui.menu_button("File", |ui| {
+        //             if ui.button("Quit").clicked() {
+        //                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        //             }
+        //         });
+        //         ui.add_space(16.0);
 
-                egui::widgets::global_theme_preference_buttons(ui);
-            });
-        });
+        //         egui::widgets::global_theme_preference_buttons(ui);
+        //     });
+        // });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::TopDown),
                 |ui| {
-                    let width = ui.available_width() / BOARD_COL as f32 * 0.9;
-                    let height = ui.available_height() / BOARD_COL as f32 * 0.9;
+                    let width = ui.available_width() / BOARD_COL as f32 * 0.95;
+                    let height = ui.available_height() / BOARD_COL as f32* 0.95;
 
                     let cell_size = egui::vec2(
                         width.min(height),
@@ -75,10 +64,18 @@ impl eframe::App for TemplateApp {
                         // .min_row_height(ui.available_height() / BOARD_COL * 0.98)
                         // .min_col_width(ui.available_width() / BOARD_COL * 0.98)
                         .show(ui, |ui| {
-                            let mut moves = vec![];
+                            
+                            
+                            
+                            
+                            let mut moves = vec![]; //TODO Ensure there are no unnecessary memory allocations
 
+                            
+
+                            //TODO Filter moves that are blocked by other pieces
                             if let Some(moving_piece) = self.currently_moving {
                                 moves.append(&mut moving_piece.get_valid_moves());
+                                // self.board.get_valid_moves(&moving_piece);
                             }
 
                             self.board
@@ -87,19 +84,38 @@ impl eframe::App for TemplateApp {
                                 .enumerate()
                                 .for_each(|(row_idx, row)| {
                                     row.iter_mut().enumerate().for_each(|(col_idx, element)| {
-                                        let highlight =
+
+                                        let mut highlight =
                                             moves.contains(&(col_idx as u8, row_idx as u8));
 
                                         if let Some(element) = element {
+
+
+                                            /*When there is a piece present in the path of the moving piece the position from the current piece is removed as available movement spot.
+                                            When the piece is of the opposing colour the field is highligted as possible capture point.*/
+                                            if highlight == true { //Only if the highlight is true does this code need to be executed
+
+                                                moves.iter().for_each(|to_filter|{
+
+                                                    if highlight == true { //If the highlight is already false there is no need to continue checking for equality
+                                                        highlight = !element.pos_x.eq(&to_filter.0) || !element.pos_y.eq(&to_filter.1); //If either of the coordinates differ the highlight is kept
+                                                    }
+                                        
+                                                    
+                                                });
+
+                                            }
+
+
                                             let image = element.get_image().sense(egui::Sense {
                                                 click: true,
                                                 drag: true,
                                                 focusable: true,
                                             });
 
-                                            let res = ui.add_sized(cell_size, image).highlight();
+                                            let res = ui.add_sized(cell_size, image);
 
-                                            if res.clicked() {
+                                            if res.clicked() { //Select a piece for movement
                                                 element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
 
                                                 if element.is_moving == true {
@@ -109,7 +125,7 @@ impl eframe::App for TemplateApp {
                                                 }
                                             }
 
-                                            if highlight == true {
+                                            if highlight == true {//Highlight fields valid for movement
                                                 ui.painter().rect_stroke(
                                                     res.rect,
                                                     0.0,
@@ -122,7 +138,8 @@ impl eframe::App for TemplateApp {
                                                     egui::Stroke::new(1.0, egui::Color32::WHITE),
                                                 );
                                             }
-                                        } else {
+                                         } else {                                            
+                                            
                                             let (rect, response) = ui.allocate_exact_size(
                                                 cell_size,
                                                 egui::Sense {
@@ -132,9 +149,16 @@ impl eframe::App for TemplateApp {
                                                 },
                                             );
 
-                                            // let dropped = response.dnd_release_payload().unwrap();
+                                            if response.clicked() { 
 
-                                            if highlight == true {
+                                                if moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.is_some() {//When a piece is moving set the destination when it is valid
+                                                    self.currently_moving.as_mut().unwrap().move_piece(col_idx as u8, row_idx as u8);
+                                                    println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
+                                                }
+
+                                            }
+
+                                            if highlight == true { //Highlight fields valid for movement
                                                 ui.painter().rect_stroke(
                                                     rect,
                                                     0.0,
@@ -151,53 +175,19 @@ impl eframe::App for TemplateApp {
                                     });
 
                                     ui.end_row();
-                                    // ui.label("");
+
                                 });
+
+                                self.board.update_board(self.currently_moving);
                         })
                 },
             );
 
-            if let Some(moveable) = &self.currently_moving {
-                println!("Currently moving: {}", moveable.get_name());
-            } else {
-                println!("Nothing moves");
-            }
+            // if let Some(moveable) = &self.currently_moving {
+            //     println!("Currently moving: {}", moveable.get_name());
+            // } else {
+            //     println!("Nothing moves");
+            // }
         });
-
-        // egui::CentralPanel::default().show(ctx, |ui| {
-        //     let cell_size = egui::vec2(
-        //         ui.available_width() / BOARD_COL as f32 * 0.9,
-        //         ui.available_height() / BOARD_COL as f32 * 0.9,
-        //     );
-
-        //     egui::Grid::new("board")
-        //         .num_columns(BOARD_COL as usize)
-        //         .show(ui, |ui| {
-        //             for row in self.board.grid.iter() {
-        //                 for element in row.iter() {
-        //                     // Allocate space for this cell
-        //                     let (rect, _response) =
-        //                         ui.allocate_exact_size(cell_size, egui::Sense::click());
-
-        //                     // Draw the outline of the cell
-        //                     ui.painter().rect_stroke(
-        //                         rect,
-        //                         0.0,
-        //                         egui::Stroke::new(1.0, egui::Color32::BLACK),
-        //                     );
-
-        //                     // If there's a piece to draw, place it inside this allocated area
-        //                     if let Some(piece) = element {
-        //                         let image = piece.get_image();
-
-        //                         // You can either add the image using add_sized to fit exactly, or just `ui.put`:
-        //                         // let mut image_ui = ui.add_sized(rect.size(), image);
-        //                         ui.put(rect, image);
-        //                     }
-        //                 }
-        //                 ui.end_row();
-        //             }
-        //         });
-        // });
     }
 }
