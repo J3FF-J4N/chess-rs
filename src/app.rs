@@ -45,7 +45,10 @@ impl eframe::App for TemplateApp {
         //     });
         // });
 
+    
+
         egui::CentralPanel::default().show(ctx, |ui| {
+
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::TopDown),
                 |ui| {
@@ -114,18 +117,37 @@ impl eframe::App for TemplateApp {
                                                 focusable: true,
                                             });
 
+                                            
+
                                             let res = ui.add_sized(cell_size, image);
 
+                                            /*This code will always mean that a piece is currently selected. When a piece is selected and another piece is clicked
+                                            it should capture the piece. The validity of the move is already verified, it must only be verified if the move is in the 
+                                            list of valid moves. */
                                             if res.clicked() { //Select a piece for movement
-                                                element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
 
-                                                //TODO Find a correct way to capture a piece
+                                                //If a piece is already selcted for movement it means the clicked piece was captured
+                                                if moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.is_some() {//When a piece is moving set the destination when it is valid
+                                                    self.currently_moving.as_mut().unwrap().move_piece(col_idx as u8, row_idx as u8);
+                                                    #[cfg(debug_assertions)]
+                                                    println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
 
-                                                if element.is_moving == true {
-                                                    self.currently_moving = Some(element.to_owned())
-                                                } else {
-                                                    self.currently_moving = None;
+
+                                                    //TODO Add the currently selected element to a list of already captured elements
+                                                } else { //If this code is reached it means either no piece is currently selected or the move was not valid
+
+                                                    element.is_moving = !element.is_moving; //This allows the play to deselect a chosen piece
+
+                                                    //TODO Find a correct way to capture a piece
+    
+                                                    if element.is_moving == true {
+                                                        self.currently_moving = Some(element.to_owned())
+                                                    } else {
+                                                        self.currently_moving = None;
+                                                    }
+
                                                 }
+
                                             }
 
 
@@ -138,7 +160,7 @@ impl eframe::App for TemplateApp {
                                                 ui.painter().rect_stroke(
                                                     res.rect,
                                                     0.0,
-                                                    egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                                    egui::Stroke::new(3.0, egui::Color32::GOLD),
                                                 );
                                             } else {
                                                 ui.painter().rect_stroke(
@@ -177,7 +199,7 @@ impl eframe::App for TemplateApp {
                                                 ui.painter().rect_stroke(
                                                     rect,
                                                     0.0,
-                                                    egui::Stroke::new(1.0, egui::Color32::GOLD),
+                                                    egui::Stroke::new(3.0, egui::Color32::GOLD),
                                                 );
                                             } else {
                                                 ui.painter().rect_stroke(

@@ -287,14 +287,35 @@ impl Piece {
 
         if new_y.1 == false {
             if new_y.0 <= 7 && new_y.0 <= 7 {
-                ret.push((self.pos_x, new_y.0));
+                
+                if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
+                {
+                    if pot_blocking.get_colour() != self.get_colour() {
+                        //If the piece is of the opposing colour the move is valid
+                        ret.push((self.pos_x, new_y.0));
+                    }
+                } else {
+                    //Otherwise the move is valid
+                    ret.push((self.pos_x, new_y.0));
+                }
+                
 
                 //North East
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
                     if new_x.0 <= 7 && new_x.0 <= 7 {
-                        ret.push((new_x.0, new_y.0));
+                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        {
+                            if pot_blocking.get_colour() != self.get_colour() {
+                                //If the piece is of the opposing colour the move is valid
+                                ret.push((new_x.0, new_y.0));
+                            }
+                        } else {
+                            //Otherwise the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                        
                     }
                 }
 
@@ -303,7 +324,16 @@ impl Piece {
 
                 if new_x.1 == false {
                     if new_x.0 <= 7 && new_x.0 <= 7 {
-                        ret.push((new_x.0, new_y.0));
+                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        {
+                            if pot_blocking.get_colour() != self.get_colour() {
+                                //If the piece is of the opposing colour the move is valid
+                                ret.push((new_x.0, new_y.0));
+                            }
+                        } else {
+                            //Otherwise the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
                     }
                 }
             }
@@ -314,7 +344,17 @@ impl Piece {
 
         if new_x.1 == false {
             if new_x.0 <= 7 && new_x.0 <= 7 {
-                ret.push((new_x.0, self.pos_y));
+                if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
+                {
+                    if pot_blocking.get_colour() != self.get_colour() {
+                        //If the piece is of the opposing colour the move is valid
+                        ret.push((new_x.0, self.pos_y));
+                    }
+                } else {
+                    //Otherwise the move is valid
+                    ret.push((new_x.0, self.pos_y));
+                }
+                
             }
         }
 
@@ -323,7 +363,16 @@ impl Piece {
 
         if new_x.1 == false {
             if new_x.0 <= 7 && new_x.0 <= 7 {
-                ret.push((new_x.0, self.pos_y));
+                if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
+                {
+                    if pot_blocking.get_colour() != self.get_colour() {
+                        //If the piece is of the opposing colour the move is valid
+                        ret.push((new_x.0, self.pos_y));
+                    }
+                } else {
+                    //Otherwise the move is valid
+                    ret.push((new_x.0, self.pos_y));
+                }
             }
         }
 
@@ -332,14 +381,35 @@ impl Piece {
 
         if new_y.1 == false {
             if new_y.0 <= 7 && new_y.0 <= 7 {
-                ret.push((self.pos_x, new_y.0));
+
+                if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
+                {
+                    if pot_blocking.get_colour() != self.get_colour() {
+                        //If the piece is of the opposing colour the move is valid
+                        ret.push((self.pos_x, new_y.0));
+                    }
+                } else {
+                    //Otherwise the move is valid
+                    ret.push((self.pos_x, new_y.0));
+                }
+                
 
                 //South East
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
                     if new_x.0 <= 7 && new_x.0 <= 7 {
-                        ret.push((new_x.0, new_y.0));
+                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        {
+                            if pot_blocking.get_colour() != self.get_colour() {
+                                //If the piece is of the opposing colour the move is valid
+                                ret.push((new_x.0, new_y.0));
+                            }
+                        } else {
+                            //Otherwise the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                        
                     }
                 }
 
@@ -348,7 +418,18 @@ impl Piece {
 
                 if new_x.1 == false {
                     if new_x.0 <= 7 && new_x.0 <= 7 {
-                        ret.push((new_x.0, new_y.0));
+                        
+                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        {
+                            if pot_blocking.get_colour() != self.get_colour() {
+                                //If the piece is of the opposing colour the move is valid
+                                ret.push((new_x.0, new_y.0));
+                            }
+                        } else {
+                            //Otherwise the move is valid
+                            ret.push((new_x.0, new_y.0));
+                        }
+                        
                     }
                 }
             }
