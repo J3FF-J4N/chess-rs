@@ -20,7 +20,7 @@ pub enum Colour {
 pub struct Piece {
     //Information about the piece
     colour: Colour,
-    piece_type: PieceType,
+    pub piece_type: PieceType,
     pub pos_x: u8,
     pub pos_y: u8,
     pub piece_id: u8, //This is needed as there are several pieces that are the same
@@ -35,6 +35,9 @@ pub struct Piece {
     */
     pub first_move: bool,
 }
+
+const BOARD_MAX: u8 = 7;
+const BOARD_MIN: u8 = 0;
 
 impl Piece {
     pub fn new(colour: Colour, piece_type: PieceType, pos_x: u8, pos_y: u8, piece_id: u8) -> Self {
@@ -161,7 +164,7 @@ impl Piece {
 
         let mut ret = vec![];
 
-        for idx in 1..=7 {
+        for idx in 1..=BOARD_MAX {
             //There is a max of 8 possible fields at once the bishop can move
 
             // println!("X:{} Y:{}", self.pos_x, self.pos_y);
@@ -170,7 +173,7 @@ impl Piece {
             let new_y = self.pos_y.overflowing_sub(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if idx <= blocking.north_east && new_x.0 <= 7 && new_y.0 <= 7 {
+                if idx <= blocking.north_east && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
                     //Check if there is a piece blocking the path
 
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
@@ -196,7 +199,7 @@ impl Piece {
             let new_y = self.pos_y.overflowing_add(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if idx <= blocking.south_east && new_x.0 <= 7 && new_y.0 <= 7 {
+                if idx <= blocking.south_east && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
                     //Remain in bounds of the array
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -220,7 +223,7 @@ impl Piece {
             let new_y = self.pos_y.overflowing_add(idx);
             if new_x.1 == false && new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if idx <= blocking.south_west && new_x.0 <= 7 && new_y.0 <= 7 {
+                if idx <= blocking.south_west && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
                     //Remain in bounds of the array
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -244,7 +247,7 @@ impl Piece {
             //North West
             let new_x = self.pos_x.overflowing_sub(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_x.1 == false && new_y.1 == false && new_x.0 <= 7 && new_y.0 <= 7 {
+            if new_x.1 == false && new_y.1 == false && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
                 //Only when moves are within bounds should it be valid
                 // if new_x.0 <= blocking.north_west && new_y.0 <= blocking.north_west { //Remain in bounds of the array
                 if idx <= blocking.north_west {
@@ -286,7 +289,7 @@ impl Piece {
         let new_y = self.pos_y.overflowing_sub(1);
 
         if new_y.1 == false {
-            if new_y.0 <= 7 && new_y.0 <= 7 {
+            if new_y.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
                 
                 if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                 {
@@ -304,7 +307,7 @@ impl Piece {
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
-                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                    if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                         if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
                             if pot_blocking.get_colour() != self.get_colour() {
@@ -323,7 +326,7 @@ impl Piece {
                 let new_x = self.pos_x.overflowing_sub(1);
 
                 if new_x.1 == false {
-                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                    if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                         if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
                             if pot_blocking.get_colour() != self.get_colour() {
@@ -343,7 +346,7 @@ impl Piece {
         let new_x = self.pos_x.overflowing_add(1);
 
         if new_x.1 == false {
-            if new_x.0 <= 7 && new_x.0 <= 7 {
+            if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                 if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                 {
                     if pot_blocking.get_colour() != self.get_colour() {
@@ -362,7 +365,7 @@ impl Piece {
         let new_x = self.pos_x.overflowing_sub(1);
 
         if new_x.1 == false {
-            if new_x.0 <= 7 && new_x.0 <= 7 {
+            if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                 if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                 {
                     if pot_blocking.get_colour() != self.get_colour() {
@@ -380,7 +383,7 @@ impl Piece {
         let new_y = self.pos_y.overflowing_add(1);
 
         if new_y.1 == false {
-            if new_y.0 <= 7 && new_y.0 <= 7 {
+            if new_y.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
 
                 if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                 {
@@ -398,7 +401,7 @@ impl Piece {
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
-                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                    if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                         if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
                             if pot_blocking.get_colour() != self.get_colour() {
@@ -417,7 +420,7 @@ impl Piece {
                 let new_x = self.pos_x.overflowing_sub(1);
 
                 if new_x.1 == false {
-                    if new_x.0 <= 7 && new_x.0 <= 7 {
+                    if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                         
                         if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
@@ -445,10 +448,10 @@ impl Piece {
         let new_y = self.pos_y.overflowing_sub(2);
         if new_y.1 == false {
             //Only when moves are within bounds should it be valid
-            if new_y.0 <= 7 {
+            if new_y.0 <= BOARD_MAX {
                 let new_x = self.pos_x.overflowing_add(1); //3 North 1 East
 
-                if new_x.1 == false && new_x.0 <= 7 {
+                if new_x.1 == false && new_x.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -464,7 +467,7 @@ impl Piece {
 
                 let new_x = self.pos_x.overflowing_sub(1); //3 North 1 West
 
-                if new_x.1 == false && new_x.0 <= 7 {
+                if new_x.1 == false && new_x.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -484,10 +487,10 @@ impl Piece {
         let new_x = self.pos_x.overflowing_sub(2);
         if new_x.1 == false {
             //Only when moves are within bounds should it be valid
-            if new_x.0 <= 7 {
+            if new_x.0 <= BOARD_MAX {
                 let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
 
-                if new_y.1 == false && new_y.0 <= 7 {
+                if new_y.1 == false && new_y.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -503,7 +506,7 @@ impl Piece {
 
                 let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
 
-                if new_y.1 == false && new_y.0 <= 7 {
+                if new_y.1 == false && new_y.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -522,10 +525,10 @@ impl Piece {
         let new_y = self.pos_y.overflowing_add(2);
         if new_y.1 == false {
             //Only when moves are within bounds should it be valid
-            if new_y.0 <= 7 {
+            if new_y.0 <= BOARD_MAX {
                 let new_x = self.pos_x.overflowing_add(1); //3 South 1 East
 
-                if new_x.1 == false && new_x.0 <= 7 {
+                if new_x.1 == false && new_x.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -541,7 +544,7 @@ impl Piece {
 
                 let new_x = self.pos_x.overflowing_sub(1); //3 South 1 West
 
-                if new_x.1 == false && new_x.0 <= 7 {
+                if new_x.1 == false && new_x.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -560,10 +563,10 @@ impl Piece {
         let new_x = self.pos_x.overflowing_add(2);
         if new_x.1 == false {
             //Only when moves are within bounds should it be valid
-            if new_x.0 <= 7 {
+            if new_x.0 <= BOARD_MAX {
                 let new_y = self.pos_y.overflowing_add(1); //3 East 1 South
 
-                if new_y.1 == false && new_y.0 <= 7 {
+                if new_y.1 == false && new_y.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -579,7 +582,7 @@ impl Piece {
 
                 let new_y = self.pos_y.overflowing_sub(1); //3 East 1 North
 
-                if new_y.1 == false && new_y.0 <= 7 {
+                if new_y.1 == false && new_y.0 <= BOARD_MAX {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
@@ -608,24 +611,35 @@ impl Piece {
             match self.colour {
                 Colour::White => {
                     //For White the row index decreases
-                    ret.push((self.pos_x, self.pos_y - 2)); //If it is the pawns first move it may move two fields or one field in the y direction
-                    ret.push((self.pos_x, self.pos_y - 1));
+
+                    
+                        ret.push((self.pos_x, self.pos_y.saturating_sub(2))); //If it is the pawns first move it may move two fields or one field in the y direction
+                        ret.push((self.pos_x, self.pos_y.saturating_sub(1)));
+                    
+
+
                 }
                 Colour::Black => {
-                    //For Black the row index increases
-                    ret.push((self.pos_x, self.pos_y + 2)); //If it is the pawns first move it may move two fields or one field in the y direction
-                    ret.push((self.pos_x, self.pos_y + 1));
+                    
+                        //For Black the row index increases
+                        ret.push((self.pos_x, self.pos_y.saturating_add(2))); //If it is the pawns first move it may move two fields or one field in the y direction
+                        ret.push((self.pos_x, self.pos_y.saturating_add(1)));
+                    
                 }
             }
         } else {
             match self.colour {
                 Colour::White => {
                     //For White the row index decreases
-                    ret.push((self.pos_x, self.pos_y - 1)); //Otherwise it may only move one field
+                    if !(self.pos_y == BOARD_MAX) {
+                        ret.push((self.pos_x, self.pos_y .saturating_sub(1))); //Otherwise it may only move one field
+                    }
                 }
                 Colour::Black => {
                     //For Black the row index increases
-                    ret.push((self.pos_x, self.pos_y + 1)); //Otherwise it may only move one field
+                    if !(self.pos_y == BOARD_MIN){
+                        ret.push((self.pos_x, self.pos_y.saturating_add(1))); //Otherwise it may only move one field
+                    }
                 }
             }
         }
@@ -649,14 +663,14 @@ impl Piece {
 
         let mut blocking = Direction::default();
 
-        for idx in 1..=7 {
+        for idx in 1..=BOARD_MAX {
             //There is a max of 8 possible fields at once the bishop can move
 
             //North
             let new_y = self.pos_y.overflowing_sub(idx);
             if new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7 && idx <= blocking.north {
+                if new_y.0 <= BOARD_MAX && idx <= blocking.north {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) =
                         &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
@@ -683,7 +697,7 @@ impl Piece {
             let new_x = self.pos_x.overflowing_add(idx);
             if new_x.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && idx <= blocking.east {
+                if new_x.0 <= BOARD_MAX && idx <= blocking.east {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) =
                         &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
@@ -709,7 +723,7 @@ impl Piece {
             let new_y = self.pos_y.overflowing_add(idx);
             if new_y.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_y.0 <= 7 && idx <= blocking.south {
+                if new_y.0 <= BOARD_MAX && idx <= blocking.south {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) =
                         &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
@@ -735,7 +749,7 @@ impl Piece {
             let new_x = self.pos_x.overflowing_sub(idx);
             if new_x.1 == false {
                 //Only when moves are within bounds should it be valid
-                if new_x.0 <= 7 && idx <= blocking.west {
+                if new_x.0 <= BOARD_MAX && idx <= blocking.west {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) =
                         &boardstate.grid[self.pos_y as usize][new_x.0 as usize]

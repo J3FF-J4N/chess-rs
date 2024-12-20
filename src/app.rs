@@ -1,21 +1,33 @@
+use std::{io::Write, net::TcpStream, ops::Deref, sync::{Arc, Condvar, Mutex}, thread};
+
 use crate::{board::Board, piece::Piece};
 
-#[derive(serde::Deserialize, serde::Serialize)]
+
 // #[serde(default)]
-pub struct TemplateApp {
+pub struct Game {
+    server_coneection: TcpStream,
+    send_condition: Arc<Condvar>,
     board: Board,
-    currently_moving: Option<Piece>,
+    currently_moving: Arc<Mutex<Option<Piece>>>,
+    moves: Vec<(u8,u8)>, //By giving this vector to the struct I can avoid a syscall every loop that would allocate memory
+    state_changed: bool,
 }
 
-impl TemplateApp {
+const IP_ADDR: &'static str = "127.0.0.1:12345";
+
+impl Game {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
         Self {
+            server_coneection: TcpStream::connect(IP_ADDR).unwrap(),
+            send_condition: Arc::new(Condvar::new()),
             board: Board::init_board_state(),
-            currently_moving: None,
+            currently_moving: Arc::new(Mutex::new(None)),
+            moves: Vec::with_capacity(64), //64 is the max amount of possible moves
+            state_changed: false,
         }
 
         // Default::default()
@@ -24,28 +36,10 @@ impl TemplateApp {
 
 const BOARD_COL: f32 = 8.0;
 
-impl eframe::App for TemplateApp {
+impl eframe::App for Game {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui_extras::install_image_loaders(ctx);
-
-        // egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-        //     // The top panel is often a good place for a menu bar:
-
-        //     egui::menu::bar(ui, |ui| {
-        //         // NOTE: no File->Quit on web pages!
-        //         ui.menu_button("File", |ui| {
-        //             if ui.button("Quit").clicked() {
-        //                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-        //             }
-        //         });
-        //         ui.add_space(16.0);
-
-        //         egui::widgets::global_theme_preference_buttons(ui);
-        //     });
-        // });
-
-    
 
         egui::CentralPanel::default().show(ctx, |ui| {
 
@@ -60,26 +54,50 @@ impl eframe::App for TemplateApp {
                         height.min(width), //Ensuring the aspect ratio is always maintained
                     ); //Scaling the grid to be 10% less than max to avoid clipping
 
-                    self.board.update_board(self.currently_moving);
+                    if self.state_changed { //Update the board only when there was a change in the boardstate
+                        if self.board.update_board(&mut self.currently_moving.lock().unwrap()) {//When the board was updated it's the other players turn
+
+                        /*Getting tokio to work with egui is rather complicated, therefore the  connection will simply be a thread that sends data */
+
+                        // let piece = self.currently_moving
+
+                            // if let Some(piece_to_update) = *self.currently_moving.lock().unwrap() {
+
+                            //     let piece_clone = piece_to_update.clone();
+
+                            //     thread::spawn(move ||{
+                            //         let message = ron::ser::to_string_pretty(&piece_to_update, ron::ser::PrettyConfig::default()).unwrap();
+                                    
+                            //     }); 
+                            // }
+
+
+
+                            *self.currently_moving.lock().unwrap() = None;
+                            match self.board.current_player {
+                                crate::piece::Colour::White => self.board.current_player = crate::piece::Colour::Black,
+                                crate::piece::Colour::Black => self.board.current_player = crate::piece::Colour::White,
+                            }
+                        }
+                        self.state_changed = false;
+
+                        //self.server_coneection.write_fmt(format_args!("")).unwrap()
+                        //TODO this is where the data will be sent to the second client / server for synchronisation
+
+                    }
+
 
                     egui::Grid::new("board")
                         .num_columns(BOARD_COL as usize)
-                        // .max_col_width(ui.available_width() / BOARD_COL * 0.9)
-                        // .min_row_height(ui.available_height() / BOARD_COL * 0.98)
-                        // .min_col_width(ui.available_width() / BOARD_COL * 0.98)
                         .show(ui, |ui| {
                             
+                            self.moves.clear();
                             
-                            
-                            
-                            let mut moves = vec![]; //TODO Ensure there are no unnecessary memory allocations
-
-                            
-
                             //TODO Filter moves that are blocked by other pieces
-                            if let Some(moving_piece) = self.currently_moving {
+                            if let Some(moving_piece) = *self.currently_moving.lock().unwrap() {
                                 // moves.append(&mut moving_piece.get_valid_moves());
-                                moves.append(&mut self.board.get_valid_moves(&moving_piece));
+                                
+                                self.moves.append(&mut self.board.get_valid_moves(&moving_piece));
                             }
 
                             self.board
@@ -90,7 +108,7 @@ impl eframe::App for TemplateApp {
                                     row.iter_mut().enumerate().for_each(|(col_idx, element)| {
 
                                         let highlight =
-                                            moves.contains(&(col_idx as u8, row_idx as u8));
+                                            self.moves.contains(&(col_idx as u8, row_idx as u8));
 
                                         if let Some(element) = element {
 
@@ -119,20 +137,20 @@ impl eframe::App for TemplateApp {
 
                                             
 
-                                            let res = ui.add_sized(cell_size, image);
+                                            let piece_response = ui.add_sized(cell_size, image);
 
                                             /*This code will always mean that a piece is currently selected. When a piece is selected and another piece is clicked
                                             it should capture the piece. The validity of the move is already verified, it must only be verified if the move is in the 
                                             list of valid moves. */
-                                            if res.clicked() { //Select a piece for movement
+                                            if piece_response.clicked() { //Select a piece for movement
 
                                                 //If a piece is already selcted for movement it means the clicked piece was captured
-                                                if moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.is_some() {//When a piece is moving set the destination when it is valid
-                                                    self.currently_moving.as_mut().unwrap().move_piece(col_idx as u8, row_idx as u8);
-                                                    #[cfg(debug_assertions)]
-                                                    println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
+                                                if self.moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.lock().unwrap().is_some() {//When a piece is moving set the destination when it is valid
+                                                    self.currently_moving.lock().unwrap().unwrap().move_piece(col_idx as u8, row_idx as u8);
+                                                    // #[cfg(debug_assertions)]
+                                                    // println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
 
-
+                                                    self.state_changed = true;
                                                     //TODO Add the currently selected element to a list of already captured elements
                                                 } else { //If this code is reached it means either no piece is currently selected or the move was not valid
 
@@ -141,9 +159,9 @@ impl eframe::App for TemplateApp {
                                                     //TODO Find a correct way to capture a piece
     
                                                     if element.is_moving == true {
-                                                        self.currently_moving = Some(element.to_owned())
+                                                        *self.currently_moving.lock().unwrap() = Some(element.to_owned())
                                                     } else {
-                                                        self.currently_moving = None;
+                                                        *self.currently_moving.lock().unwrap() = None;
                                                     }
 
                                                 }
@@ -152,26 +170,26 @@ impl eframe::App for TemplateApp {
 
 
                                             #[cfg(debug_assertions)]
-                                            if res.secondary_clicked() {
+                                            if piece_response.secondary_clicked() {
                                                 println!("{:#?}", element);
                                             }
 
                                             if highlight == true {//Highlight fields valid for movement
                                                 ui.painter().rect_stroke(
-                                                    res.rect,
+                                                    piece_response.rect,
                                                     0.0,
                                                     egui::Stroke::new(3.0, egui::Color32::GOLD),
                                                 );
                                             } else {
                                                 ui.painter().rect_stroke(
-                                                    res.rect,
+                                                    piece_response.rect,
                                                     0.0,
                                                     egui::Stroke::new(1.0, egui::Color32::WHITE),
                                                 );
                                             }
                                          } else {                                            
                                             
-                                            let (rect, response) = ui.allocate_exact_size(
+                                            let (rect, field_response) = ui.allocate_exact_size(
                                                 cell_size,
                                                 egui::Sense {
                                                     click: true,
@@ -180,18 +198,19 @@ impl eframe::App for TemplateApp {
                                                 },
                                             );
 
-                                            if response.clicked() { 
+                                            if field_response.clicked() { 
 
-                                                if moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.is_some() {//When a piece is moving set the destination when it is valid
-                                                    self.currently_moving.as_mut().unwrap().move_piece(col_idx as u8, row_idx as u8);
+                                                if self.moves.contains(&(col_idx as u8, row_idx as u8)) && self.currently_moving.lock().unwrap().is_some() {//When a piece is moving set the destination when it is valid
+                                                    self.currently_moving.lock().unwrap().unwrap().move_piece(col_idx as u8, row_idx as u8);
                                                     #[cfg(debug_assertions)]
-                                                    println!("Moving {} to {} {}", self.currently_moving.as_ref().unwrap().get_name(), col_idx, row_idx);
+                                                    println!("Moving {} to {} {}", self.currently_moving.lock().unwrap().deref().unwrap().get_name(), col_idx, row_idx);
+                                                    self.state_changed = true;
                                                 }
 
                                             }
 
                                             #[cfg(debug_assertions)]
-                                            if response.secondary_clicked() {
+                                            if field_response.secondary_clicked() {
                                                 println!("{:#?}", element);
                                             }
 
@@ -219,12 +238,6 @@ impl eframe::App for TemplateApp {
                         })
                 },
             );
-
-            // if let Some(moveable) = &self.currently_moving {
-            //     println!("Currently moving: {}", moveable.get_name());
-            // } else {
-            //     println!("Nothing moves");
-            // }
         });
     }
 }

@@ -3,4 +3,5 @@
 mod app;
 mod board;
 mod piece;
-pub use app::TemplateApp;
+pub use app::Game;
+
