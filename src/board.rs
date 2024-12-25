@@ -36,13 +36,14 @@ const BOARD_WIDTH: usize = 8;
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Board {
     pub grid: [[Option<Piece>; BOARD_HEIGHT]; BOARD_WIDTH], //Using arrays instead of Vec since arrays are on the stack and; therefore, much faster
-    pub current_player: Colour
+    pub current_player: Colour,
+    pub threatened_by_white: u64,
+    pub threatened_by_black: u64,
 }
 
 impl Board {
     pub fn init_board_state() -> Self {
-        let mut state: [[Option<Piece>; BOARD_HEIGHT]; BOARD_WIDTH] =
-            [[None; BOARD_HEIGHT]; BOARD_WIDTH];
+        let mut state: [[Option<Piece>; BOARD_HEIGHT]; BOARD_WIDTH] = Default::default();
 
         //To avoid immense overhead caused by bounds checking the array is sliced into it's sides first and initialised that way
 
@@ -103,24 +104,27 @@ impl Board {
         });
 
         //White will always start
-        Self { grid: state, current_player: Colour::White }
+        Self {
+            grid: state,
+            current_player: Colour::White,
+            threatened_by_white: 0,
+            threatened_by_black: 0,
+        }
     }
 
     // pub fn get_board_state(&self) {}
 
     pub fn update_board(&mut self, piece_to_update: &mut Option<Piece>) -> bool {
-
         let mut ret: bool = false;
 
-        if let Some(mut piece_to_update) = piece_to_update {
-
+        if let Some(piece_to_update) = piece_to_update.as_mut() {
             let piece_clone = piece_to_update.clone(); //This is necessary as the new location may be updated before the old piece is removed which would change the pieces properties
 
             self.grid.iter_mut().enumerate().for_each(|(row_idx, row)| {
                 row.iter_mut().enumerate().for_each(|(col_idx, piece)| {
                     if let Some(piece_ref) = piece {
-                        if piece_clone.get_colour() == piece_ref.get_colour() //Find the piece that needs to be moved
-                            && piece_clone.get_type() == piece_ref.get_type()
+                        if piece_clone.colour == piece_ref.colour //Find the piece that needs to be moved
+                            && piece_clone.piece_type == piece_ref.piece_type
                             && piece_clone.piece_id == piece_ref.piece_id
                         {
                             //Remove the old location
@@ -130,18 +134,20 @@ impl Board {
                     if piece_to_update.pos_x == col_idx as u8
                         && piece_to_update.pos_y == row_idx as u8
                     {
+                        if piece_to_update.piece_type == PieceType::Pawn {
+                            //If the piece is a pawn I need to check if it should be promoted to a queen
 
-                        if piece_to_update.get_type() == PieceType::Pawn {//If the piece is a pawn I need to check if it should be promoted to a queen
-
-                            if piece_to_update.pos_y == BOARD_HEIGHT as u8 - 1 || piece_to_update.pos_y == BOARD_HEIGHT as u8 - 8 { //If the pawn reached the max rank (black) / min rank (white) it get's promoted
+                            if piece_to_update.pos_y == BOARD_HEIGHT as u8 - 1
+                                || piece_to_update.pos_y == BOARD_HEIGHT as u8 - 8
+                            {
+                                //If the pawn reached the max rank (black) / min rank (white) it get's promoted
                                 piece_to_update.piece_type = PieceType::Queen;
-                            }   
-
+                            }
                         }
 
                         piece_to_update.is_moving = false; //Reset the piece's movement state after a successful move
-                        //Add to new location
-                        *piece = Some(piece_to_update);
+                                                           //Add to new location
+                        *piece = Some(piece_to_update.clone());
                         ret = true;
                     }
                 });

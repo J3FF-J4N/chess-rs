@@ -1,6 +1,6 @@
 use crate::board::{Board, Direction};
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, PartialEq, Eq)]
 pub enum PieceType {
     Bishop,
     King,
@@ -10,16 +10,16 @@ pub enum PieceType {
     Rook,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, PartialEq, Eq)]
 pub enum Colour {
     White,
     Black,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, PartialEq, Eq)]
 pub struct Piece {
     //Information about the piece
-    colour: Colour,
+    pub colour: Colour,
     pub piece_type: PieceType,
     pub pos_x: u8,
     pub pos_y: u8,
@@ -179,7 +179,7 @@ impl Piece {
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
                         //If there is a piece some conditions need to be checked
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
                             blocking.north_east = idx;
                         } else {
@@ -204,7 +204,7 @@ impl Piece {
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
                         //If there is a piece some conditions need to be checked
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
                             blocking.south_east = idx;
                         } else {
@@ -228,7 +228,7 @@ impl Piece {
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
                         //If there is a piece some conditions need to be checked
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
                             blocking.south_west = idx;
                         } else {
@@ -247,7 +247,8 @@ impl Piece {
             //North West
             let new_x = self.pos_x.overflowing_sub(idx);
             let new_y = self.pos_y.overflowing_sub(idx);
-            if new_x.1 == false && new_y.1 == false && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
+            if new_x.1 == false && new_y.1 == false && new_x.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX
+            {
                 //Only when moves are within bounds should it be valid
                 // if new_x.0 <= blocking.north_west && new_y.0 <= blocking.north_west { //Remain in bounds of the array
                 if idx <= blocking.north_west {
@@ -256,7 +257,7 @@ impl Piece {
                     {
                         //If there is a piece some conditions need to be checked
 
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
 
                             blocking.north_west = idx;
@@ -290,10 +291,9 @@ impl Piece {
 
         if new_y.1 == false {
             if new_y.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
-                
                 if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                 {
-                    if pot_blocking.get_colour() != self.get_colour() {
+                    if pot_blocking.colour != self.colour {
                         //If the piece is of the opposing colour the move is valid
                         ret.push((self.pos_x, new_y.0));
                     }
@@ -301,16 +301,16 @@ impl Piece {
                     //Otherwise the move is valid
                     ret.push((self.pos_x, new_y.0));
                 }
-                
 
                 //North East
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
                     if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
-                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        if let Some(pot_blocking) =
+                            &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
-                            if pot_blocking.get_colour() != self.get_colour() {
+                            if pot_blocking.colour != self.colour {
                                 //If the piece is of the opposing colour the move is valid
                                 ret.push((new_x.0, new_y.0));
                             }
@@ -318,7 +318,6 @@ impl Piece {
                             //Otherwise the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
-                        
                     }
                 }
 
@@ -327,9 +326,10 @@ impl Piece {
 
                 if new_x.1 == false {
                     if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
-                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        if let Some(pot_blocking) =
+                            &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
-                            if pot_blocking.get_colour() != self.get_colour() {
+                            if pot_blocking.colour != self.colour {
                                 //If the piece is of the opposing colour the move is valid
                                 ret.push((new_x.0, new_y.0));
                             }
@@ -349,7 +349,7 @@ impl Piece {
             if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                 if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                 {
-                    if pot_blocking.get_colour() != self.get_colour() {
+                    if pot_blocking.colour != self.colour {
                         //If the piece is of the opposing colour the move is valid
                         ret.push((new_x.0, self.pos_y));
                     }
@@ -357,7 +357,6 @@ impl Piece {
                     //Otherwise the move is valid
                     ret.push((new_x.0, self.pos_y));
                 }
-                
             }
         }
 
@@ -368,7 +367,7 @@ impl Piece {
             if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
                 if let Some(pot_blocking) = &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                 {
-                    if pot_blocking.get_colour() != self.get_colour() {
+                    if pot_blocking.colour != self.colour {
                         //If the piece is of the opposing colour the move is valid
                         ret.push((new_x.0, self.pos_y));
                     }
@@ -384,10 +383,9 @@ impl Piece {
 
         if new_y.1 == false {
             if new_y.0 <= BOARD_MAX && new_y.0 <= BOARD_MAX {
-
                 if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                 {
-                    if pot_blocking.get_colour() != self.get_colour() {
+                    if pot_blocking.colour != self.colour {
                         //If the piece is of the opposing colour the move is valid
                         ret.push((self.pos_x, new_y.0));
                     }
@@ -395,16 +393,16 @@ impl Piece {
                     //Otherwise the move is valid
                     ret.push((self.pos_x, new_y.0));
                 }
-                
 
                 //South East
                 let new_x = self.pos_x.overflowing_add(1);
 
                 if new_x.1 == false {
                     if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
-                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        if let Some(pot_blocking) =
+                            &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
-                            if pot_blocking.get_colour() != self.get_colour() {
+                            if pot_blocking.colour != self.colour {
                                 //If the piece is of the opposing colour the move is valid
                                 ret.push((new_x.0, new_y.0));
                             }
@@ -412,7 +410,6 @@ impl Piece {
                             //Otherwise the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
-                        
                     }
                 }
 
@@ -421,10 +418,10 @@ impl Piece {
 
                 if new_x.1 == false {
                     if new_x.0 <= BOARD_MAX && new_x.0 <= BOARD_MAX {
-                        
-                        if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
+                        if let Some(pot_blocking) =
+                            &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                         {
-                            if pot_blocking.get_colour() != self.get_colour() {
+                            if pot_blocking.colour != self.colour {
                                 //If the piece is of the opposing colour the move is valid
                                 ret.push((new_x.0, new_y.0));
                             }
@@ -432,7 +429,6 @@ impl Piece {
                             //Otherwise the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
-                        
                     }
                 }
             }
@@ -455,7 +451,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -471,7 +467,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -494,7 +490,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -510,7 +506,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -532,7 +528,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -548,7 +544,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -570,7 +566,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -586,7 +582,7 @@ impl Piece {
                     //If there is a piece some conditions need to be checked
                     if let Some(pot_blocking) = &boardstate.grid[new_y.0 as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() != self.get_colour() {
+                        if pot_blocking.colour != self.colour {
                             //If the piece is of the opposing colour the move is valid
                             ret.push((new_x.0, new_y.0));
                         }
@@ -602,45 +598,66 @@ impl Piece {
     }
 
     fn get_pawn_moves(&self, boardstate: &Board) -> Vec<(u8, u8)> {
-        let mut ret: Vec<(u8, u8)> = Vec::with_capacity(64); //64 Is the amount of available spaces on a chess board; it is impossible to have more moves than available spaces
+        let mut ret: Vec<(u8, u8)> = Vec::with_capacity(16); //64 Is the amount of available spaces on a chess board; it is impossible to have more moves than available spaces
 
         //TODO En Passant
 
         //Pawn is the only piece where the colour matters as it's the only piece that has a direction dependency (e.g. Black can only go Down and White up)
-        if self.first_move == true {
-            match self.colour {
-                Colour::White => {
-                    //For White the row index decreases
+        let times_to_loop = if self.first_move == true {
+            2
+        } else {
+            1
+            // let new_y = match self.colour {
+            //     Colour::White => self.pos_y.saturating_sub(1), //For White the row index decreases
+            //     Colour::Black => self.pos_y.saturating_add(1), //For Black the row index increases
+            // };
 
-                    
-                        ret.push((self.pos_x, self.pos_y.saturating_sub(2))); //If it is the pawns first move it may move two fields or one field in the y direction
-                        ret.push((self.pos_x, self.pos_y.saturating_sub(1)));
-                    
+            // let new_x_right = self.pos_x.saturating_add(1);
+            // let new_x_left = self.pos_x.saturating_sub(1);
 
+            // if let None = &boardstate.grid[new_y as usize][self.pos_x as usize] { //If there is a piece of any colour the move is blocked since pawns can't capture vertically
+            //     ret.push((self.pos_x, new_y));
+            // }
+        };
 
+        for y in 1..=times_to_loop {
+            let new_y = match self.colour {
+                Colour::White => self.pos_y.saturating_sub(y), //For White the row index decreases
+                Colour::Black => self.pos_y.saturating_add(y), //For Black the row index increases
+            };
+
+            if self.pos_x == BOARD_MAX {
+                //The right most pawn can't capture diagonally in the positive direction
+                let new_x = self.pos_x.saturating_sub(1);
+                if let Some(_) = &boardstate.grid[new_y as usize][new_x as usize] {
+                    ret.push((new_x, new_y));
                 }
-                Colour::Black => {
-                    
-                        //For Black the row index increases
-                        ret.push((self.pos_x, self.pos_y.saturating_add(2))); //If it is the pawns first move it may move two fields or one field in the y direction
-                        ret.push((self.pos_x, self.pos_y.saturating_add(1)));
-                    
+            } else if self.pos_y == BOARD_MIN {
+                //The left most pawn can't capture diagonally in the negative direction
+                let new_x = self.pos_x.saturating_add(1);
+                if let Some(_) = &boardstate.grid[new_y as usize][new_x as usize] {
+                    ret.push((new_x, new_y));
+                }
+            } else {
+                let new_x_neg = self.pos_x.saturating_sub(1);
+                let new_x_pos = self.pos_x.saturating_add(1);
+                if let Some(_) = &boardstate.grid[new_y as usize][new_x_neg as usize] {
+                    ret.push((new_x_neg, new_y));
+                }
+
+                if let Some(_) = &boardstate.grid[new_y as usize][new_x_pos as usize] {
+                    ret.push((new_x_pos, new_y));
                 }
             }
-        } else {
-            match self.colour {
-                Colour::White => {
-                    //For White the row index decreases
-                    if !(self.pos_y == BOARD_MAX) {
-                        ret.push((self.pos_x, self.pos_y .saturating_sub(1))); //Otherwise it may only move one field
-                    }
-                }
-                Colour::Black => {
-                    //For Black the row index increases
-                    if !(self.pos_y == BOARD_MIN){
-                        ret.push((self.pos_x, self.pos_y.saturating_add(1))); //Otherwise it may only move one field
-                    }
-                }
+
+            // let new_x_right = self.pos_x.saturating_add(1);
+            // let new_x_left = self.pos_x.saturating_add(1);
+
+            if let None = &boardstate.grid[new_y as usize][self.pos_x as usize] {
+                //If there is a piece of any colour the move is blocked since pawns can't capture vertically
+                ret.push((self.pos_x, new_y));
+            } else {
+                break;
             }
         }
 
@@ -675,7 +692,7 @@ impl Piece {
                     if let Some(pot_blocking) =
                         &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                     {
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
 
                             blocking.north = idx;
@@ -702,7 +719,7 @@ impl Piece {
                     if let Some(pot_blocking) =
                         &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
 
                             blocking.east = idx;
@@ -728,7 +745,7 @@ impl Piece {
                     if let Some(pot_blocking) =
                         &boardstate.grid[new_y.0 as usize][self.pos_x as usize]
                     {
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
 
                             blocking.south = idx;
@@ -754,7 +771,7 @@ impl Piece {
                     if let Some(pot_blocking) =
                         &boardstate.grid[self.pos_y as usize][new_x.0 as usize]
                     {
-                        if pot_blocking.get_colour() == self.get_colour() {
+                        if pot_blocking.colour == self.colour {
                             //If the piece at the given location is of the same colour the movement is blocked before
 
                             blocking.west = idx;
@@ -773,6 +790,10 @@ impl Piece {
             }
         }
 
+        //A player may not castle out of, through, or into check.
+
+        //when in double check the only legal moves are king moves
+
         ret
     }
 
@@ -783,14 +804,6 @@ impl Piece {
 
         self.pos_x = new_x;
         self.pos_y = new_y;
-    }
-
-    pub fn get_type(&self) -> PieceType {
-        self.piece_type
-    }
-
-    pub fn get_colour(&self) -> Colour {
-        self.colour
     }
 
     // pub fn get_id(&self) -> egui::Id {

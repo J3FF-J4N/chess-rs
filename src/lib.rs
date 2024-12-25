@@ -4,4 +4,3 @@ mod app;
 mod board;
 mod piece;
 pub use app::Game;
-

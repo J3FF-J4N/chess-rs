@@ -21,4 +21,3 @@ fn main() -> eframe::Result {
         Box::new(|cc| Ok(Box::new(chess_rs::Game::new(cc)))),
     )
 }
-
