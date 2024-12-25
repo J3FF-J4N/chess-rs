@@ -23,4 +23,4 @@ To implement more complex king mvoes it is required to generate a threat map to 
 
 # The game will not be finished since the complexity increases greatly ...
 
-Calculating the legal king moves in the late game is incredibly difficult. The game will be handled like a board game and the player simply has to know when they won. 
+Calculating the legal king moves in the late game is incredibly difficult. The game will be handled like a board game and the player simply has to know when they won. Furthermore, the server will only act as a record for already played games.

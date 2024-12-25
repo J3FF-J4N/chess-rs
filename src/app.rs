@@ -1,12 +1,10 @@
 use std::{
-    io::{Read, Write},
+    io::Write,
     net::TcpStream,
     ops::Deref,
     sync::{Arc, Condvar, Mutex},
-    thread::{self, Thread},
+    thread::{self},
 };
-
-use ron::ser::PrettyConfig;
 
 use crate::{board::Board, piece::Piece};
 
@@ -17,12 +15,12 @@ pub struct Game {
     board: Arc<Mutex<Board>>,
     currently_moving: Option<Piece>,
     moves: Vec<(u8, u8)>, //By giving this vector to the struct I can avoid a syscall every loop that would allocate memory
-    update_board: Arc<Mutex<bool>>,
+    // update_board: Arc<Mutex<bool>>,
     state_changed: bool,
 }
 
 const IP_ADDR: &'static str = "127.0.0.1:12345";
-const BUFF_SIZE: usize = 4096;
+// const BUFF_SIZE: usize = 4096;
 
 impl Game {
     /// Called once before the first frame.
@@ -38,13 +36,11 @@ impl Game {
 
         let send_condition_clone = Arc::clone(&send_condition);
 
-        let update_board = Arc::new(Mutex::new(false));
-        let update_board_clone = Arc::clone(&update_board);
+        // let update_board = Arc::new(Mutex::new(false));
+        // let update_board_clone = Arc::clone(&update_board);
 
         thread::spawn(move || {
             let mut server = TcpStream::connect(IP_ADDR).unwrap();
-            let mut input_buffer = String::new();
-            let mut buffer = [0; BUFF_SIZE];
 
             let (send, cvar) = &*send_condition_clone;
 
@@ -64,70 +60,8 @@ impl Game {
 
                 server.flush().unwrap();
 
-                //Once the message is sent to the server the program can wait for a response
-
-                // let mut message_in = String::new();
-
-                // Read from the stream
-                match server.read(&mut buffer) {
-                    Ok(0) => {
-                        println!("Server closed connection");
-                        break; // Connection closed
-                    }
-                    Ok(bytes_read) => {
-                        input_buffer.push_str(&String::from_utf8_lossy(&buffer[..bytes_read]));
-
-                        // Check for the end of the message
-                        while let Some(pos) = input_buffer.find('\n') {
-                            let message = input_buffer[..pos].to_string();
-                            input_buffer.drain(..=pos); // Remove the processed message from the buffer
-
-                            // Process the message (e.g., send it to the other player)
-
-                            // println!("Received data from server: {}", message);
-
-                            *board_clone.lock().unwrap() = ron::from_str(&message).unwrap();//ron::from_str(&message).unwrap();
-                            *update_board_clone.lock().unwrap() = true;
-
-                            // Here you would send the message to the other player
-                            // send_message_to_other_player(message, player_id);
-                        }
-
-                        
-
-                    }
-                    Err(err) => {
-                        println!("Error reading from stream: {}", err);
-                        break; // Exit the loop on error
-                    }
-                }
-
-                // *board_clone.lock().unwrap() = ron::from_str(&message_in).unwrap();
-
-                // message_in.clear();
-
-                // server.write_fmt(format_args!("{}", message)).unwrap();
             }
         });
-
-        // let pair = Arc::new((Mutex::new(false), Condvar::new()));
-        // let pair2 = Arc::clone(&pair);
-
-        // // Inside of our lock, spawn a new thread, and then wait for it to start.
-        // thread::spawn(move || {
-        //     let (lock, cvar) = &*pair2;
-        //     let mut started = lock.lock().unwrap();
-        //     *started = true;
-        //     // We notify the condvar that the value has changed.
-        //     cvar.notify_one();
-        // });
-
-        // // Wait for the thread to start up.
-        // let (lock, cvar) = &*pair;
-        // let mut started = lock.lock().unwrap();
-        // while !*started {
-        //     started = cvar.wait(started).unwrap();
-        // }
 
         Self {
             // server_coneection: TcpStream::connect(IP_ADDR).unwrap(),
@@ -135,7 +69,7 @@ impl Game {
             board: board,
             currently_moving: None,
             moves: Vec::with_capacity(64), //64 is the max amount of possible moves
-            update_board: Arc::new(Mutex::new(false)),
+            // update_board: Arc::new(Mutex::new(false)),
             state_changed: false
         }
 
@@ -163,35 +97,11 @@ impl eframe::App for Game {
                         height.min(width), //Ensuring the aspect ratio is always maintained
                     ); //Scaling the grid to be 10% less than max to avoid clipping
 
-                    let mut update = self.update_board.lock().unwrap();
-                    if *update {
-                        self.board.lock().unwrap().update_board(&mut self.currently_moving);
-                        *update = false;
-                    }
-
                     if self.state_changed { //Update the board only when there was a change in the boardstate
 
                         let board_updated = self.board.lock().unwrap().update_board(&mut self.currently_moving);
 
                         if board_updated {//When the board was updated it's the other players turn
-
-                        
-
-                        /*Getting tokio to work with egui is rather complicated, therefore the  connection will simply be a thread that sends data */
-
-                        // let piece = self.currently_moving
-
-                            // if let Some(piece_to_update) = *self.currently_moving.lock().unwrap() {
-
-                            //     let piece_clone = piece_to_update.clone();
-
-                            //     thread::spawn(move ||{
-                            //         let message = ron::ser::to_string_pretty(&piece_to_update, ron::ser::PrettyConfig::default()).unwrap();
-                                    
-                            //     }); 
-                            // }
-
-
 
                             self.currently_moving = None;
                             let player = self.board.lock().unwrap().current_player.clone();
@@ -207,10 +117,6 @@ impl eframe::App for Game {
 
                         self.send_condition.1.notify_all();
                         println!("Notifying");
-                        // self.send_condition.notify_all();
-
-                        //self.server_coneection.write_fmt(format_args!("")).unwrap()
-                        //TODO this is where the data will be sent to the second client / server for synchronisation
 
                     }
 
