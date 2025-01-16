@@ -16,7 +16,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "eframe template",
+        "chess-rs",
         native_options,
         Box::new(|cc| Ok(Box::new(chess_rs::Game::new(cc)))),
     )
